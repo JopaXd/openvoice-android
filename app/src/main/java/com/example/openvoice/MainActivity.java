@@ -10,6 +10,8 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.example.openvoice.DataStore;
+
 import com.example.openvoice.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,6 +33,12 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         NavigationUI.setupWithNavController(binding.navView, navController);
+        DataStore dataStore = new DataStore(this);
+        //Check if settings for default connection type is set.
+        //If result is DNF, this means the app is run for the first time, therefore set wifi as default.
+        String conn = dataStore.getStr("connType");
+        if (conn == "DNF"){
+            dataStore.setStr("connType", "wifi");
+        }
     }
-
 }
