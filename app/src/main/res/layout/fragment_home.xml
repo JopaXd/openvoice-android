@@ -6,17 +6,77 @@
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeFragment">
 
+
     <TextView
-        android:id="@+id/text_home"
-        android:layout_width="match_parent"
+        android:id="@+id/logoName"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:textAlignment="center"
-        android:textSize="20sp"
+        android:fontFamily="@font/noto_sans_bold"
+        android:text="@string/openvoice"
+        android:textColor="#fff"
+        android:textSize="42px"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.105"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.003" />
+
+    <androidx.constraintlayout.utils.widget.ImageFilterView
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/off_circle"
+        android:src="@drawable/ic_baseline_power_settings_new_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.255" />
+
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/noto_sans_bold"
+        android:text="Status: Server not on."
+        android:textColor="#fff"
+        android:textSize="42px"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/button"
+        app:layout_constraintVertical_bias="0.159" />
+
+    <TextView
+        android:id="@+id/clientAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/noto_sans_bold"
+        android:text="Client Address: Not connected."
+        android:textColor="#fff"
+        android:textSize="42px"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/statusText"
+        app:layout_constraintVertical_bias="0.429" />
+
+    <TextView
+        android:id="@+id/clientDeviceName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/noto_sans_bold"
+        android:text="Client Name: Not connected."
+        android:textColor="#fff"
+        android:textSize="42px"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/clientAddress"
+        app:layout_constraintVertical_bias="0.155" />
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
