@@ -22,8 +22,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.003" />
 
-    <androidx.constraintlayout.utils.widget.ImageFilterView
-        android:id="@+id/button"
+    <ImageButton
+        android:id="@+id/serverButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/off_circle"
@@ -46,7 +46,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button"
+        app:layout_constraintTop_toBottomOf="@+id/serverButton"
         app:layout_constraintVertical_bias="0.159" />
 
     <TextView
