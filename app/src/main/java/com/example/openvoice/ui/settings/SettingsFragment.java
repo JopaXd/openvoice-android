@@ -1,18 +1,27 @@
 package com.example.openvoice.ui.settings;
 
+import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -49,6 +58,16 @@ public class SettingsFragment extends Fragment {
         return null;
     }
 
+    private ActivityResultLauncher<String> mPermissionResult = registerForActivityResult(
+        new ActivityResultContracts.RequestPermission(),
+        result -> {
+            if(result) {
+                Toast.makeText(getContext(),"Permission granted.",Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(),"Permission denied.",Toast.LENGTH_SHORT).show();
+            }
+    });
+
     private SettingsViewModel settingsViewModel;
     private FragmentSettingsBinding binding;
 
@@ -82,6 +101,20 @@ public class SettingsFragment extends Fragment {
                 else{
                     dataStore.setStr("connType", "bluetooth");
                 }
+            }
+        });
+        Button permissionButton = root.findViewById(R.id.requestPermission);
+        permissionButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                if (getActivity().checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED){
+                    Toast.makeText(getContext(),"All necessary permissions already granted.",Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    mPermissionResult.launch(Manifest.permission.RECORD_AUDIO);
+                }
+
             }
         });
         return root;
