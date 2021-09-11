@@ -97,9 +97,11 @@ public class SettingsFragment extends Fragment {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (checkedId==R.id.radio_wifi){
                     dataStore.setStr("connType", "wifi");
+                    Toast.makeText(getContext(),"Now using: Wi-Fi",Toast.LENGTH_SHORT).show();
                 }
                 else{
                     dataStore.setStr("connType", "bluetooth");
+                    Toast.makeText(getContext(),"Now using: Bluetooth",Toast.LENGTH_SHORT).show();
                 }
             }
         });
