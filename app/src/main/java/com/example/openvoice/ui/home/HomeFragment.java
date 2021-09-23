@@ -4,9 +4,11 @@ import static android.content.Context.WIFI_SERVICE;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.media.AudioFormat;
@@ -22,6 +24,10 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
@@ -89,6 +95,18 @@ public class HomeFragment extends Fragment {
         clientAddr = root.findViewById(R.id.clientAddress);
         clientName = root.findViewById(R.id.clientDeviceName);
         WifiManager wifi = (WifiManager) getContext().getApplicationContext().getSystemService(WIFI_SERVICE);
+        ActivityResultLauncher<Intent> mStartForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() != Activity.RESULT_OK) {
+                        Toast.makeText(getContext(),"Failed to start server! Bluetooth not enabled.",Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        status = true;
+                        serverBtn.setBackground(buttonOnDrawable);
+                        startServer();
+                        statusTxt.setText("Status: Waiting for client...");
+                    }
+                });
         serverBtn.setOnClickListener(view -> {
             if (status == true){
                 serverBtn.setBackground(buttonOffDrawable);
@@ -120,36 +138,25 @@ public class HomeFragment extends Fragment {
                     if (conn.equals("bluetooth")){
                         if (mBluetoothAdapter != null){
                             if (!mBluetoothAdapter.isEnabled()){
-                                mBluetoothAdapter.enable();
-                                try {
-                                    //Not the best way to do it.
-                                    //But it solves the crashing issue.
-                                    //This gives time bluetooth to turn on.
-                                    //Otherwise it will just start to socket without bluetooth being enabled.
-                                    //This results in a crash.
-                                    Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
+                                mStartForResult.launch(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
                             }
                         }
                         else{
                             Toast.makeText(getContext(),"Bluetooth is not supported on this device, use Wi-Fi instead.",Toast.LENGTH_SHORT).show();
-                            return;
                         }
                     }
                     //Wi-Fi
                     else{
                         if (!wifi.isWifiEnabled()){
                             Toast.makeText(getContext(),"Wi-Fi is not enabled!",Toast.LENGTH_SHORT).show();
-                            return;
+                        }
+                        else{
+                            status = true;
+                            serverBtn.setBackground(buttonOnDrawable);
+                            startServer();
+                            statusTxt.setText("Status: Waiting for client...");
                         }
                     }
-                    status = true;
-                    serverBtn.setBackground(buttonOnDrawable);
-                    startServer();
-                    statusTxt.setText("Status: Waiting for client...");
-
                 }
                 else{
                     Toast.makeText(getContext(),"The app has no access to your microphone. Go to settings to request microphone permission.",Toast.LENGTH_SHORT).show();
@@ -213,8 +220,7 @@ public class HomeFragment extends Fragment {
                                 Log.e("DEBUG", "Socket's accept() method failed", e);
                                 break;
                             }
-
-                            if (socket != null) {
+                            if (bSocket != null) {
                                 byte[] buffer = new byte[minBufSize];
                                 recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
                                         sampleRate, AudioFormat.CHANNEL_IN_MONO,
@@ -239,6 +245,22 @@ public class HomeFragment extends Fragment {
             }
         });
         streamThread.start();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        status = false;
+        if (mmServerSocket != null) {
+            try {
+                mmServerSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recorder != null){
+            recorder.release();
+        }
     }
 
     @Override
