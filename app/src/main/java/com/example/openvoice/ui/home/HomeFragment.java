@@ -140,6 +140,12 @@ public class HomeFragment extends Fragment {
                             if (!mBluetoothAdapter.isEnabled()){
                                 mStartForResult.launch(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
                             }
+                            else{
+                                status = true;
+                                serverBtn.setBackground(buttonOnDrawable);
+                                startServer();
+                                statusTxt.setText("Status: Waiting for client...");
+                            }
                         }
                         else{
                             Toast.makeText(getContext(),"Bluetooth is not supported on this device, use Wi-Fi instead.",Toast.LENGTH_SHORT).show();
