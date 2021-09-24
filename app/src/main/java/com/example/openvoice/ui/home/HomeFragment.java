@@ -57,8 +57,6 @@ public class HomeFragment extends Fragment {
 
     private boolean status = false;
 
-    private boolean shouldUiThreadRun = true;
-
     private final int port = 50005;
 
     public TextView statusTxt;
@@ -80,13 +78,17 @@ public class HomeFragment extends Fragment {
 
     private final UUID bluetoothUUID = UUID.fromString("71019876-227c-4d6f-adea-87d9aa1f7d2c");
 
+    View root;
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         homeViewModel =
                 new ViewModelProvider(this).get(HomeViewModel.class);
-        binding = FragmentHomeBinding.inflate(inflater, container, false);
-        View root = binding.getRoot();
+        if (root == null){
+            binding = FragmentHomeBinding.inflate(inflater, container, false);
+            root = binding.getRoot();
+        }
         dataStore = new DataStore(getContext());
         ImageButton serverBtn = root.findViewById(R.id.serverButton);
         Drawable buttonOffDrawable = ResourcesCompat.getDrawable(getResources(), R.drawable.off_circle, null);
@@ -254,8 +256,8 @@ public class HomeFragment extends Fragment {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onDestroyView() {
+        super.onDestroyView();
         status = false;
         if (mmServerSocket != null) {
             try {
@@ -267,11 +269,6 @@ public class HomeFragment extends Fragment {
         if (recorder != null){
             recorder.release();
         }
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
         binding = null;
     }
 }
