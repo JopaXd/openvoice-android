@@ -6,6 +6,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
@@ -229,6 +230,15 @@ public class HomeFragment extends Fragment {
                                 break;
                             }
                             if (bSocket != null) {
+                                BluetoothDevice connectedDevice = bSocket.getRemoteDevice();
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        statusTxt.setText("Status: Client connected!");
+                                        clientAddr.setText(String.format("Client Address: %s", connectedDevice.getAddress()));
+                                        clientName.setText(String.format("Client Name: %s", connectedDevice.getName()));
+                                    }
+                                });
                                 byte[] buffer = new byte[minBufSize];
                                 recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
                                         sampleRate, AudioFormat.CHANNEL_IN_MONO,
