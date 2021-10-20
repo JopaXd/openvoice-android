@@ -7,4 +7,6 @@
     <string name="text_wifi">Wi-Fi</string>
     <string name="text_bluetooth">Bluetooth</string>
     <string name="request_permission">Request Permissions</string>
+    <string name="authorStr">Made by Pavle Milanov.</string>
+    <string name="aboutStr">OpenVoice is an app that allows you to use your mobile device as a microphone for your computer.</string>
 </resources>
