@@ -25,8 +25,6 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -64,6 +62,11 @@ public class HomeFragment extends Fragment {
     public TextView clientAddr;
     public TextView clientName;
 
+    public ImageButton serverBtn;
+
+    public Drawable buttonOffDrawable;
+    public Drawable buttonOnDrawable;
+
     public DataStore dataStore;
 
     AudioRecord recorder;
@@ -91,9 +94,9 @@ public class HomeFragment extends Fragment {
             root = binding.getRoot();
         }
         dataStore = new DataStore(getContext());
-        ImageButton serverBtn = root.findViewById(R.id.serverButton);
-        Drawable buttonOffDrawable = ResourcesCompat.getDrawable(getResources(), R.drawable.off_circle, null);
-        Drawable buttonOnDrawable = ResourcesCompat.getDrawable(getResources(), R.drawable.on_circle, null);
+        serverBtn = root.findViewById(R.id.serverButton);
+        buttonOffDrawable = ResourcesCompat.getDrawable(getResources(), R.drawable.off_circle, null);
+        buttonOnDrawable = ResourcesCompat.getDrawable(getResources(), R.drawable.on_circle, null);
         statusTxt = root.findViewById(R.id.statusText);
         clientAddr = root.findViewById(R.id.clientAddress);
         clientName = root.findViewById(R.id.clientDeviceName);
@@ -196,6 +199,31 @@ public class HomeFragment extends Fragment {
                         String deviceName = new String(request.getData(), request.getOffset(), request.getLength());
                         InetAddress clientIp = request.getAddress();
                         int clientPort = request.getPort();
+                        //This thread checks for client messages.
+                        //If clients sends "dc", this means the client has disconnected.
+                        //Therefore just update the ui and close the socket and all that.
+                        new Thread(() -> {
+                            while (status){
+                                byte[] initialBuffer = new byte[256];
+                                DatagramPacket request1 = new DatagramPacket(initialBuffer, initialBuffer.length);
+                                try {
+                                    socket.receive(request1);
+                                    String msgText = new String(request1.getData(), request1.getOffset(), request1.getLength());
+                                    if (msgText.equals("dc")){
+                                        status = false;
+                                        getActivity().runOnUiThread(() -> {
+                                            statusTxt.setText("Status: Server not on.");
+                                            clientAddr.setText("Client Address: Not connected.");
+                                            clientName.setText("Client Name: Not connected.");
+                                            serverBtn.setBackground(buttonOffDrawable);
+                                        });
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                        }).start();
                         //Client has connected, let the user know.
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
@@ -258,7 +286,22 @@ public class HomeFragment extends Fragment {
                     e.printStackTrace();
 
                 } catch (IOException ioException) {
-                    ioException.printStackTrace();
+                    status = false;
+                    try{
+                        recorder.release();
+                    }
+                    catch (Exception e){
+                    }
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            statusTxt.setText("Status: Server not on.");
+                            clientAddr.setText("Client Address: Not connected.");
+                            clientName.setText("Client Name: Not connected.");
+                            serverBtn.setBackground(buttonOffDrawable);
+                        }
+                    });
+
                 }
             }
         });
@@ -278,6 +321,9 @@ public class HomeFragment extends Fragment {
         }
         if (recorder != null){
             recorder.release();
+        }
+        if (socket != null) {
+            socket.close();
         }
         binding = null;
     }
