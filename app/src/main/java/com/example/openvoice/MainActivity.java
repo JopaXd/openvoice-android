@@ -14,9 +14,17 @@ import com.example.openvoice.DataStore;
 
 import com.example.openvoice.databinding.ActivityMainBinding;
 
+import java.io.IOException;
+
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+
+    public boolean status = false;
+    public String statusStr = "Status: Server not on.";
+    public String connectedAddr = "Client Address: Not connected.";
+    public String connectedClientName = "Client Name: Not connected.";
+    public String connType = "None";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,5 +48,11 @@ public class MainActivity extends AppCompatActivity {
         if (conn == "DNF"){
             dataStore.setStr("connType", "wifi");
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        status = false;
     }
 }

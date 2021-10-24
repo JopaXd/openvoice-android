@@ -32,6 +32,7 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.openvoice.MainActivity;
 import com.example.openvoice.R;
 import com.example.openvoice.databinding.FragmentHomeBinding;
 
@@ -54,8 +55,6 @@ public class HomeFragment extends Fragment {
 
     public static BluetoothServerSocket mmServerSocket;
 
-    private boolean status = false;
-
     private final int port = 50005;
 
     public TextView statusTxt;
@@ -66,6 +65,8 @@ public class HomeFragment extends Fragment {
 
     public Drawable buttonOffDrawable;
     public Drawable buttonOnDrawable;
+
+    public MainActivity mActivity;
 
     public DataStore dataStore;
 
@@ -82,17 +83,16 @@ public class HomeFragment extends Fragment {
 
     private final UUID bluetoothUUID = UUID.fromString("71019876-227c-4d6f-adea-87d9aa1f7d2c");
 
-    View root;
-
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         homeViewModel =
                 new ViewModelProvider(this).get(HomeViewModel.class);
-        if (root == null){
-            binding = FragmentHomeBinding.inflate(inflater, container, false);
-            root = binding.getRoot();
-        }
+        binding = FragmentHomeBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
+        mActivity = (MainActivity)getActivity();
+        String connectedAddr = mActivity.connectedAddr;
+        String connectedName = mActivity.connectedClientName;
         dataStore = new DataStore(getContext());
         serverBtn = root.findViewById(R.id.serverButton);
         buttonOffDrawable = ResourcesCompat.getDrawable(getResources(), R.drawable.off_circle, null);
@@ -100,6 +100,73 @@ public class HomeFragment extends Fragment {
         statusTxt = root.findViewById(R.id.statusText);
         clientAddr = root.findViewById(R.id.clientAddress);
         clientName = root.findViewById(R.id.clientDeviceName);
+        if (mActivity.status == false) {
+            serverBtn.setBackground(buttonOffDrawable);
+        }
+        else{
+            serverBtn.setBackground(buttonOnDrawable);
+        }
+        statusTxt.setText(mActivity.statusStr);
+        clientAddr.setText(mActivity.connectedAddr);
+        clientName.setText(mActivity.connectedClientName);
+        //This thread handles anything ui wise.
+        //It updates the TextViews and the Drawable of the server Button based on the
+        //Variables in MainActivity.
+        new Thread(() -> {
+            while (true){
+                try{
+                    if (!statusTxt.getText().toString().equals(mActivity.statusStr)){
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                statusTxt.setText(mActivity.statusStr);
+                            }
+                        });
+                    }
+                    if (!clientName.getText().toString().equals(mActivity.connectedClientName)){
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                clientName.setText(mActivity.connectedClientName);
+                            }
+                        });
+                    }
+                    if(!clientAddr.getText().toString().equals(mActivity.connectedAddr)){
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                clientAddr.setText(mActivity.connectedAddr);
+                            }
+                        });
+                    }
+                    if(serverBtn.getDrawable() == buttonOffDrawable){
+                        if (mActivity.status != false){
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    serverBtn.setBackground(buttonOnDrawable);
+                                }
+                            });
+                        }
+                    }
+                    else if(serverBtn.getDrawable() == buttonOnDrawable){
+                        if(mActivity.status != true){
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    serverBtn.setBackground(buttonOffDrawable);
+                                }
+                            });
+                        }
+                    }
+                }
+                catch(NullPointerException e) {
+                    break;
+                }
+            }
+
+        }).start();
+        //This thread just updates the TextVies based on the variables in the Activity.
         WifiManager wifi = (WifiManager) getContext().getApplicationContext().getSystemService(WIFI_SERVICE);
         ActivityResultLauncher<Intent> mStartForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -107,26 +174,30 @@ public class HomeFragment extends Fragment {
                         Toast.makeText(getContext(),"Failed to start server! Bluetooth not enabled.",Toast.LENGTH_SHORT).show();
                     }
                     else{
-                        status = true;
+                        mActivity.status = true;
                         serverBtn.setBackground(buttonOnDrawable);
                         startServer();
                         statusTxt.setText("Status: Waiting for client...");
+                        mActivity.statusStr = "Status: Waiting for client...";
                     }
                 });
         serverBtn.setOnClickListener(view -> {
-            if (status == true){
+            if (mActivity.status == true){
                 serverBtn.setBackground(buttonOffDrawable);
-                status = false;
+                mActivity.status = false;
                 statusTxt.setText("Status: Server not on.");
                 clientAddr.setText("Client Address: Not connected.");
                 clientName.setText("Client Name: Not connected.");
+                mActivity.statusStr = "Status: Server not on.";
+                mActivity.connectedAddr = "Client Address: Not connected.";
+                mActivity.connectedClientName = "Client Name: Not connected.";
                 try{
                     recorder.release();
                 }
                 catch (NullPointerException e){
                 }
                 String conn = dataStore.getStr("connType");
-                if (conn.equals("bluetooth")){
+                if (mActivity.connType == "bluetooth"){
                     try {
                         mmServerSocket.close();
                     } catch (IOException e) {
@@ -147,10 +218,12 @@ public class HomeFragment extends Fragment {
                                 mStartForResult.launch(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
                             }
                             else{
-                                status = true;
+                                mActivity.status = true;
                                 serverBtn.setBackground(buttonOnDrawable);
                                 startServer();
+                                mActivity.connType = "bluetooth";
                                 statusTxt.setText("Status: Waiting for client...");
+                                mActivity.statusStr = "Status: Waiting for client...";
                             }
                         }
                         else{
@@ -163,10 +236,12 @@ public class HomeFragment extends Fragment {
                             Toast.makeText(getContext(),"Wi-Fi is not enabled!",Toast.LENGTH_SHORT).show();
                         }
                         else{
-                            status = true;
+                            mActivity.status = true;
                             serverBtn.setBackground(buttonOnDrawable);
                             startServer();
+                            mActivity.connType = "wifi";
                             statusTxt.setText("Status: Waiting for client...");
+                            mActivity.statusStr = "Status: Waiting for client...";
                         }
                     }
                 }
@@ -203,20 +278,17 @@ public class HomeFragment extends Fragment {
                         //If clients sends "dc", this means the client has disconnected.
                         //Therefore just update the ui and close the socket and all that.
                         new Thread(() -> {
-                            while (status){
+                            while (mActivity.status){
                                 byte[] initialBuffer = new byte[256];
                                 DatagramPacket request1 = new DatagramPacket(initialBuffer, initialBuffer.length);
                                 try {
                                     socket.receive(request1);
                                     String msgText = new String(request1.getData(), request1.getOffset(), request1.getLength());
                                     if (msgText.equals("dc")){
-                                        status = false;
-                                        getActivity().runOnUiThread(() -> {
-                                            statusTxt.setText("Status: Server not on.");
-                                            clientAddr.setText("Client Address: Not connected.");
-                                            clientName.setText("Client Name: Not connected.");
-                                            serverBtn.setBackground(buttonOffDrawable);
-                                        });
+                                        mActivity.status = false;
+                                        mActivity.statusStr = "Status: Server not on.";
+                                        mActivity.connectedAddr = "Client Address: Not connected.";
+                                        mActivity.connectedClientName = "Client Name: Not connected.";
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -225,16 +297,11 @@ public class HomeFragment extends Fragment {
 
                         }).start();
                         //Client has connected, let the user know.
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                statusTxt.setText("Status: Client connected!");
-                                clientAddr.setText(String.format("Client Address: %s", clientIp.toString().replace("/", "")));
-                                clientName.setText(String.format("Client Name: %s", deviceName));
-                            }
-                        });
+                        mActivity.statusStr = "Status: Client connected!";
+                        mActivity.connectedAddr = String.format("Client Address: %s", clientIp.toString().replace("/", ""));
+                        mActivity.connectedClientName = String.format("Client Name: %s", deviceName);
                         recorder.startRecording();
-                        while (status){
+                        while (mActivity.status){
                             recorder.read(buffer,0, buffer.length);
                             DatagramPacket audioData = new DatagramPacket(buffer, buffer.length, clientIp, clientPort);
                             socket.send(audioData);
@@ -250,7 +317,7 @@ public class HomeFragment extends Fragment {
                         }
                         mmServerSocket = tmp;
                         BluetoothSocket bSocket = null;
-                        while (status) {
+                        while (mActivity.status) {
                             try {
                                 bSocket = mmServerSocket.accept();
                             } catch (IOException e) {
@@ -259,21 +326,16 @@ public class HomeFragment extends Fragment {
                             }
                             if (bSocket != null) {
                                 BluetoothDevice connectedDevice = bSocket.getRemoteDevice();
-                                getActivity().runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        statusTxt.setText("Status: Client connected!");
-                                        clientAddr.setText(String.format("Client Address: %s", connectedDevice.getAddress()));
-                                        clientName.setText(String.format("Client Name: %s", connectedDevice.getName()));
-                                    }
-                                });
+                                mActivity.statusStr = "Status: Client connected!";
+                                mActivity.connectedAddr = String.format("Client Address: %s", connectedDevice.getAddress());
+                                mActivity.connectedClientName = String.format("Client Name: %s", connectedDevice.getName());
                                 byte[] buffer = new byte[minBufSize];
                                 recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
                                         sampleRate, AudioFormat.CHANNEL_IN_MONO,
                                         AudioFormat.ENCODING_PCM_16BIT, minBufSize * 10);
                                 recorder.startRecording();
                                 OutputStream os = bSocket.getOutputStream();
-                                while (status){
+                                while (mActivity.status){
                                     recorder.read(buffer,0, buffer.length);
                                     os.write(buffer);
                                     os.flush();
@@ -286,22 +348,15 @@ public class HomeFragment extends Fragment {
                     e.printStackTrace();
 
                 } catch (IOException ioException) {
-                    status = false;
+                    mActivity.status = false;
                     try{
                         recorder.release();
                     }
                     catch (Exception e){
                     }
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            statusTxt.setText("Status: Server not on.");
-                            clientAddr.setText("Client Address: Not connected.");
-                            clientName.setText("Client Name: Not connected.");
-                            serverBtn.setBackground(buttonOffDrawable);
-                        }
-                    });
-
+                    mActivity.statusStr = "Status: Server not on.";
+                    mActivity.connectedAddr = "Client Address: Not connected.";
+                    mActivity.connectedClientName = "Client Name: Not connected.";
                 }
             }
         });
@@ -311,20 +366,5 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        status = false;
-        if (mmServerSocket != null) {
-            try {
-                mmServerSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        if (recorder != null){
-            recorder.release();
-        }
-        if (socket != null) {
-            socket.close();
-        }
-        binding = null;
     }
 }
