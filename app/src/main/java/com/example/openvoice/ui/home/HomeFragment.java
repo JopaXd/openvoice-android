@@ -139,25 +139,21 @@ public class HomeFragment extends Fragment {
                             }
                         });
                     }
-                    if(serverBtn.getDrawable() == buttonOffDrawable){
-                        if (mActivity.status != false){
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    serverBtn.setBackground(buttonOnDrawable);
-                                }
-                            });
-                        }
+                    if(serverBtn.getBackground() == buttonOffDrawable && mActivity.status != false){
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                serverBtn.setBackground(buttonOnDrawable);
+                            }
+                        });
                     }
-                    else if(serverBtn.getDrawable() == buttonOnDrawable){
-                        if(mActivity.status != true){
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    serverBtn.setBackground(buttonOffDrawable);
-                                }
-                            });
-                        }
+                    else if(serverBtn.getBackground() == buttonOnDrawable && mActivity.status != true){
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                serverBtn.setBackground(buttonOffDrawable);
+                            }
+                        });
                     }
                 }
                 catch(NullPointerException e) {
@@ -175,19 +171,13 @@ public class HomeFragment extends Fragment {
                     }
                     else{
                         mActivity.status = true;
-                        serverBtn.setBackground(buttonOnDrawable);
                         startServer();
-                        statusTxt.setText("Status: Waiting for client...");
                         mActivity.statusStr = "Status: Waiting for client...";
                     }
                 });
         serverBtn.setOnClickListener(view -> {
             if (mActivity.status == true){
-                serverBtn.setBackground(buttonOffDrawable);
                 mActivity.status = false;
-                statusTxt.setText("Status: Server not on.");
-                clientAddr.setText("Client Address: Not connected.");
-                clientName.setText("Client Name: Not connected.");
                 mActivity.statusStr = "Status: Server not on.";
                 mActivity.connectedAddr = "Client Address: Not connected.";
                 mActivity.connectedClientName = "Client Name: Not connected.";
@@ -219,10 +209,8 @@ public class HomeFragment extends Fragment {
                             }
                             else{
                                 mActivity.status = true;
-                                serverBtn.setBackground(buttonOnDrawable);
                                 startServer();
                                 mActivity.connType = "bluetooth";
-                                statusTxt.setText("Status: Waiting for client...");
                                 mActivity.statusStr = "Status: Waiting for client...";
                             }
                         }
@@ -237,10 +225,8 @@ public class HomeFragment extends Fragment {
                         }
                         else{
                             mActivity.status = true;
-                            serverBtn.setBackground(buttonOnDrawable);
                             startServer();
                             mActivity.connType = "wifi";
-                            statusTxt.setText("Status: Waiting for client...");
                             mActivity.statusStr = "Status: Waiting for client...";
                         }
                     }
@@ -289,6 +275,7 @@ public class HomeFragment extends Fragment {
                                         mActivity.statusStr = "Status: Server not on.";
                                         mActivity.connectedAddr = "Client Address: Not connected.";
                                         mActivity.connectedClientName = "Client Name: Not connected.";
+                                        socket.close();
                                     }
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -357,6 +344,12 @@ public class HomeFragment extends Fragment {
                     mActivity.statusStr = "Status: Server not on.";
                     mActivity.connectedAddr = "Client Address: Not connected.";
                     mActivity.connectedClientName = "Client Name: Not connected.";
+                    try {
+                        mmServerSocket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    socket.close();
                 }
             }
         });
