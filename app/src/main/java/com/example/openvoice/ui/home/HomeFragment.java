@@ -162,7 +162,7 @@ public class HomeFragment extends Fragment {
             }
 
         }).start();
-        //This thread just updates the TextVies based on the variables in the Activity.
+        //This thread just updates the TextViews based on the variables in the Activity.
         WifiManager wifi = (WifiManager) getContext().getApplicationContext().getSystemService(WIFI_SERVICE);
         ActivityResultLauncher<Intent> mStartForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -172,6 +172,7 @@ public class HomeFragment extends Fragment {
                     else{
                         mActivity.status = true;
                         startServer();
+                        mActivity.connType = "bluetooth";
                         mActivity.statusStr = "Status: Waiting for client...";
                     }
                 });
@@ -186,8 +187,7 @@ public class HomeFragment extends Fragment {
                 }
                 catch (NullPointerException e){
                 }
-                String conn = dataStore.getStr("connType");
-                if (mActivity.connType == "bluetooth"){
+                if (mActivity.connType.equals("bluetooth")){
                     try {
                         mmServerSocket.close();
                     } catch (IOException e) {
