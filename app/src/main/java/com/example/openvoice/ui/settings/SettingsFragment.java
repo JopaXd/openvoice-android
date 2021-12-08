@@ -22,13 +22,13 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.openvoice.R;
 import com.example.openvoice.databinding.FragmentSettingsBinding;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 
 import com.example.openvoice.DataStore;
-
 
 public class SettingsFragment extends Fragment {
 
@@ -39,7 +39,9 @@ public class SettingsFragment extends Fragment {
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
                     if (!inetAddress.isLoopbackAddress()) {
-                        return inetAddress.getHostAddress().toString();
+                        if (inetAddress instanceof Inet4Address){
+                            return inetAddress.getHostAddress();
+                        }
                     }
                 }
             }
