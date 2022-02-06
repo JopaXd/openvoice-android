@@ -335,6 +335,10 @@ public class HomeFragment extends Fragment {
                     e.printStackTrace();
 
                 } catch (IOException ioException) {
+                    //An issue lies here.
+                    //I don't recall how and why i wrote this, but.
+                    //The code tries to close the bluetooth socket
+                    //But that bluetooth socket is null when the app is using Wi-Fi.
                     mActivity.status = false;
                     try{
                         recorder.release();
@@ -346,10 +350,14 @@ public class HomeFragment extends Fragment {
                     mActivity.connectedClientName = "Client Name: Not connected.";
                     try {
                         mmServerSocket.close();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    socket.close();
+                    try {
+                        socket.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
